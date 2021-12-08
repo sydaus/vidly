@@ -1,4 +1,5 @@
 import { getMovies } from "../services/fakeMovieService";
+import { getGenres } from "../services/fakeGenreService";
 import React, { Component } from "react";
 import "font-awesome/fonts/fontawesome-webfont.svg";
 import Pagination from "./common/pagination";
@@ -8,10 +9,15 @@ import { paginate } from "../utlis/paginate";
 
 class Movies extends React.Component {
   state = {
-    movies: getMovies(),
+    movies: [],
+    genres: [],
     currentPage: 1,
     pageSize: 4,
   };
+
+  componentDidMount() {
+    this.setState({ movies: getMovies(), genres: getGenres() });
+  }
 
   handleDelete = (movie) => {
     const movies = this.state.movies.filter((c) => c._id !== movie._id);
@@ -31,6 +37,10 @@ class Movies extends React.Component {
     this.setState({ currentPage: page });
   };
 
+  handleGenreSelect = (genre) => {
+    console.log(genre);
+  };
+
   render() {
     // const value = this.state.movies.length;
     const { length: count } = this.state.movies;
@@ -44,7 +54,10 @@ class Movies extends React.Component {
     return (
       <div className="row">
         <div className="col-2">
-          <ListGroup />
+          <ListGroup
+            items={this.state.genres}
+            onItemSelect={this.handleGenreSelect}
+          />
         </div>
         <div className="col">
           <span>There are {count} movies in the database</span>
