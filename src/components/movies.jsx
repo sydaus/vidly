@@ -1,6 +1,6 @@
 import { getMovies } from "../services/fakeMovieService";
 import { getGenres } from "../services/fakeGenreService";
-import React, { Component } from "react";
+import React from "react";
 import "font-awesome/fonts/fontawesome-webfont.svg";
 import Pagination from "./common/pagination";
 import ListGroup from "./common/listGroup";
@@ -15,7 +15,7 @@ class Movies extends React.Component {
     currentPage: 1,
     pageSize: 4,
     sortColumn: { path: "title", order: "asc" },
-    // selectedGenre: null,
+    selectedGenre: "",
   };
 
   componentDidMount() {
@@ -45,20 +45,11 @@ class Movies extends React.Component {
     this.setState({ selectedGenre: genre, currentPage: 1 });
   };
 
-  handleSort = (path) => {
-    const sortColumn = { ...this.state.sortColumn };
-    if (sortColumn.path === path)
-      sortColumn.order = sortColumn.order === "asc" ? "desc" : "asc";
-    else {
-      sortColumn.path = path;
-      sortColumn.order = "asc";
-    }
+  handleSort = (sortColumn) => {
     this.setState({ sortColumn });
   };
 
-  render() {
-    // const value = this.state.movies.length;
-    const { length: count } = this.state.movies;
+  getPagedData = () => {
     const {
       pageSize,
       currentPage,
@@ -68,23 +59,25 @@ class Movies extends React.Component {
     } = this.state;
 
     const filtered =
-      // selectedGenre && selectedGenre.name != "All Genres"
-      // the line below is better with the same function of the line above
       selectedGenre && selectedGenre._id
         ? allMovies.filter((m) => m.genre._id === selectedGenre._id)
         : allMovies;
 
-    // const sorted = sortColumn
-    //   ? filtered.sort((a, b) => b.sortColumn - a.sortColumn)
-    //   : filtered;
-
     const sorted = _.orderBy(filtered, [sortColumn.path], [sortColumn.order]);
     const movies = paginate(sorted, currentPage, pageSize);
+    return { totalCount: filtered.length, data: movies };
+  };
+
+  render() {
+    // const value = this.state.movies.length;
+    const { length: count } = this.state.movies;
+    const { pageSize, currentPage, sortColumn } = this.state;
 
     if (count === 0) {
       return <span>there are no movie in the database</span>;
     }
     // else {
+    const { totalCount, data: movies } = this.getPagedData();
     return (
       <div className="row">
         <div className="col-3">
@@ -98,16 +91,17 @@ class Movies extends React.Component {
           />
         </div>
         <div className="col">
-          <span>There are {filtered.length} movies in the database</span>
+          <span>There are {totalCount} movies in the database</span>
           <MoviesTable
             movies={movies}
+            sortColumn={sortColumn}
             onDelete={this.handleDelete}
             onLike={this.handleLike}
             onSort={this.handleSort}
           />
 
           <Pagination
-            itemsCount={filtered.length}
+            itemsCount={totalCount}
             pageSize={pageSize}
             currentPage={currentPage}
             onPageChange={this.handlePageChange}
